@@ -103,3 +103,38 @@ router.put("/editar/:id", (req, res) => {
 })
 
 module.exports = router
+
+router.get("/buscar/:time_id/:termo", (req, res) => {
+
+    const { time_id, termo } = req.params
+
+    const sql = `
+SELECT * FROM usuarios
+WHERE time_id = ?
+AND (
+nome LIKE ?
+OR apelido LIKE ?
+OR id = ?
+)
+`
+
+    db.query(sql, [
+
+        time_id,
+        `%${termo}%`,
+        `%${termo}%`,
+        termo
+
+    ], (err, result) => {
+
+        if (err) {
+
+            return res.status(500).json(err)
+
+        }
+
+        res.json(result)
+
+    })
+
+})

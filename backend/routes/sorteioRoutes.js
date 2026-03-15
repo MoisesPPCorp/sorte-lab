@@ -31,7 +31,6 @@ router.post("/sortear/:time_id", (req, res) => {
         let nivel2 = linha.filter(j => j.nivel == 2)
         let nivel3 = linha.filter(j => j.nivel == 3)
 
-        // embaralhar
         const shuffle = (arr) => arr.sort(() => Math.random() - 0.5)
 
         shuffle(nivel1)
@@ -39,7 +38,6 @@ router.post("/sortear/:time_id", (req, res) => {
         shuffle(nivel3)
         shuffle(goleiros)
 
-        const jogadoresPorGrupo = 5
         const linhaPorGrupo = 4
 
         const quantidadeGrupos = Math.ceil(linha.length / linhaPorGrupo)
@@ -56,7 +54,7 @@ router.post("/sortear/:time_id", (req, res) => {
 
         }
 
-        // distribuir nivel 3
+        // distribuir nível 3
         nivel3.forEach((j, i) => {
 
             let g = i % quantidadeGrupos
@@ -64,7 +62,7 @@ router.post("/sortear/:time_id", (req, res) => {
 
         })
 
-        // distribuir nivel 1
+        // distribuir nível 1
         nivel1.forEach((j, i) => {
 
             let g = i % quantidadeGrupos
@@ -72,7 +70,7 @@ router.post("/sortear/:time_id", (req, res) => {
 
         })
 
-        // distribuir nivel 2
+        // distribuir nível 2
         let g = 0
 
         nivel2.forEach(j => {
@@ -99,7 +97,65 @@ router.post("/sortear/:time_id", (req, res) => {
 
         })
 
+        const resultadoJSON = JSON.stringify(grupos)
+
+        const sqlSalvar = `
+        INSERT INTO sorteios (time_id, data_sorteio, resultado)
+        VALUES (?, NOW(), ?)
+        `
+
+        db.query(sqlSalvar, [time_id, resultadoJSON])
+
         res.json(grupos)
+
+    })
+
+})
+
+router.get("/historico/:time_id", (req, res) => {
+
+    const { time_id } = req.params
+
+    const sql = `
+    SELECT *
+    FROM sorteios
+    WHERE time_id = ?
+    ORDER BY data_sorteio DESC
+    `
+
+    db.query(sql, [time_id], (err, result) => {
+
+        if (err) {
+            return res.status(500).json(err)
+        }
+
+        res.json(result)
+
+    })
+
+})
+
+router.get("/abrir/:id", (req, res) => {
+
+    const { id } = req.params
+
+    const sql = `
+    SELECT *
+    FROM sorteios
+    WHERE id = ?
+    `
+
+    db.query(sql, [id], (err, result) => {
+
+        if (err) {
+            return res.status(500).json(err)
+        }
+
+        if (result.length === 0) {
+            return res.json({ erro: "Sorteio não encontrado" })
+        }
+
+        res.json(result[0])
 
     })
 

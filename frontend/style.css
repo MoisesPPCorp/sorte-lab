@@ -61,3 +61,22 @@ p {
     background-color: #1a5fcc;
 
 }
+
+.jogador {
+
+    background: #eeeeee;
+    margin: 5px;
+    padding: 6px;
+    border-radius: 6px;
+    cursor: grab;
+
+}
+
+.card-historico {
+
+    background: white;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 6px;
+
+}

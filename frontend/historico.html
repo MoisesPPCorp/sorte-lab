@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SorteLab - Histórico</title>
+
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>SorteLab</h1>
+        <h2>Histórico de Sorteios</h2>
+
+        <hr>
+
+        <div id="listaHistorico"></div>
+
+        <hr>
+
+        <h2>Resultado do Sorteio</h2>
+
+        <div class="grupos">
+
+            <div class="grupo">
+                <h3>Grupo A</h3>
+                <div id="grupoA"></div>
+            </div>
+
+            <div class="grupo">
+                <h3>Grupo B</h3>
+                <div id="grupoB"></div>
+            </div>
+
+            <div class="grupo">
+                <h3>Grupo C</h3>
+                <div id="grupoC"></div>
+            </div>
+
+            <div class="grupo">
+                <h3>Grupo D</h3>
+                <div id="grupoD"></div>
+            </div>
+
+        </div>
+
+        <br>
+
+        <button onclick="voltar()">Voltar</button>
+
+    </div>
+
+    <script>
+
+        const API = "http://localhost:3000"
+
+        async function carregarHistorico() {
+
+            const time_id = localStorage.getItem("time_id")
+
+            const res = await fetch(API + "/sorteio/historico/" + time_id)
+
+            const sorteios = await res.json()
+
+            const lista = document.getElementById("listaHistorico")
+
+            lista.innerHTML = ""
+
+            if (sorteios.length == 0) {
+
+                lista.innerHTML = "<p>Nenhum sorteio encontrado.</p>"
+                return
+
+            }
+
+            sorteios.forEach(s => {
+
+                lista.innerHTML += `
+
+<div class="card-historico">
+
+<p>
+Sorteio #${s.id}<br>
+${new Date(s.data_sorteio).toLocaleString()}
+</p>
+
+<button onclick="abrirSorteio(${s.id})">
+Abrir sorteio
+</button>
+
+</div>
+
+`
+
+            })
+
+        }
+
+        async function abrirSorteio(id) {
+
+            const res = await fetch(API + "/sorteio/abrir/" + id)
+
+            const sorteio = await res.json()
+
+            const resultado = JSON.parse(sorteio.resultado)
+
+            document.getElementById("grupoA").innerHTML = ""
+            document.getElementById("grupoB").innerHTML = ""
+            document.getElementById("grupoC").innerHTML = ""
+            document.getElementById("grupoD").innerHTML = ""
+
+            resultado.forEach(g => {
+
+                const div = document.getElementById("grupo" + g.grupo)
+
+                g.linha.forEach(j => {
+
+                    div.innerHTML += `<p>${j.nome}</p>`
+
+                })
+
+                if (g.goleiro) {
+
+                    div.innerHTML += `<p>🥅 ${g.goleiro.nome}</p>`
+
+                }
+
+            })
+
+        }
+
+        function voltar() {
+
+            window.location.href = "admin.html"
+
+        }
+
+        carregarHistorico()
+
+    </script>
+
+</body>
+
+</html>

@@ -79,3 +79,26 @@ function entrar() {
 
 }
 
+function permitirSoltar(ev) {
+
+    ev.preventDefault()
+
+}
+
+function arrastar(ev) {
+
+    ev.dataTransfer.setData("text", ev.target.id)
+
+}
+
+function soltar(ev) {
+
+    ev.preventDefault()
+
+    const data = ev.dataTransfer.getData("text")
+
+    const jogador = document.getElementById(data)
+
+    ev.target.appendChild(jogador)
+
+}
