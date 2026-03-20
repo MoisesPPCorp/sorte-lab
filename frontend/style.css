@@ -12,71 +12,206 @@ body {
     justify-content: center;
     align-items: center;
 
-    height: 100vh;
+    min-height: 100vh;
 }
 
 .container {
     text-align: center;
+    width: 100%;
+    max-width: 700px;
 }
 
+/* TITULOS */
 h1 {
     font-size: 42px;
     margin-bottom: 10px;
 }
 
-p {
-    color: #555;
-    margin-bottom: 40px;
-    font-size: 18px;
+h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
 }
 
+/* INPUTS */
+input,
+select,
+button {
+    display: block;
+    width: 100%;
+    margin: 8px auto;
+    padding: 10px;
+
+    font-size: 14px;
+
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+/* BOTÕES */
+button {
+    background-color: #2c7be5;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover {
+    background-color: #1a5fcc;
+}
+
+/* MENU (index) */
 .menu {
     margin-top: 20px;
 }
 
 .menu button {
-
-    display: block;
     width: 220px;
+}
 
-    margin: 12px auto;
-    padding: 12px;
+/* 🔥 DASHBOARD */
+.card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    min-width: 120px;
+    text-align: center;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
 
-    font-size: 16px;
+.card h2 {
+    margin: 0;
+    font-size: 22px;
+}
 
-    border: none;
+.card p {
+    margin: 5px 0 0;
+    font-size: 14px;
+    color: #555;
+}
+
+/* 📋 LISTA */
+#listaParticipantes {
+    text-align: left;
+    margin-top: 10px;
+}
+
+#listaParticipantes div {
+    background: white;
+    padding: 8px;
     border-radius: 6px;
+    margin-bottom: 8px;
+}
 
-    background-color: #2c7be5;
+/* 🔥 GRUPOS */
+.grupos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+}
+
+.grupo {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    width: 220px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.grupo h3 {
+    background: #2c7be5;
     color: white;
-
-    cursor: pointer;
-
-    transition: 0.2s;
-
+    padding: 8px;
+    border-radius: 6px;
 }
 
-.menu button:hover {
-
-    background-color: #1a5fcc;
-
-}
-
+/* 👤 JOGADOR */
 .jogador {
-
-    background: #eeeeee;
-    margin: 5px;
+    background: #f1f1f1;
+    margin: 5px 0;
     padding: 6px;
     border-radius: 6px;
-    cursor: grab;
-
 }
 
-.card-historico {
+/* ⭐ ESPECIAL */
+.especial {
+    background: #ffe082;
+    font-weight: bold;
+}
 
-    background: white;
-    padding: 10px;
-    margin: 10px;
-    border-radius: 6px;
+/* 🎯 NÍVEIS */
+.n1 {
+    border-left: 5px solid #4caf50;
+}
 
+.n2 {
+    border-left: 5px solid #ff9800;
+}
+
+.n3 {
+    border-left: 5px solid #f44336;
+}
+
+/* 🔄 BOTÃO LOADING */
+button.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* 💬 ALERTAS */
+.alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    z-index: 999;
+    animation: fadeIn 0.3s ease;
+}
+
+.alert.sucesso {
+    background: #4caf50;
+}
+
+.alert.erro {
+    background: #f44336;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 🎲 LOADING SORTEIO */
+.loading-sorteio {
+    font-size: 20px;
+    font-weight: bold;
+    color: #2c7be5;
+    text-align: center;
+    margin-top: 20px;
+    animation: piscar 1s infinite;
+}
+
+@keyframes piscar {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }

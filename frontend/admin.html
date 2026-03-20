@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Painel Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - SorteLab</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -13,23 +14,34 @@
 
         <h1>SorteLab</h1>
 
+        <h3>Cadastrar participante</h3>
+
         <input id="nome" placeholder="Nome">
         <input id="apelido" placeholder="Apelido">
-        <input id="nivel" placeholder="Nível (1,2,3)">
 
-        <button onclick="cadastrar()">Cadastrar</button>
+        <select id="nivel">
+            <option value="">Selecione o nível</option>
+            <option value="1">Nível 1</option>
+            <option value="2">Nível 2</option>
+            <option value="3">Nível 3</option>
+        </select>
+
+        <select id="tipo">
+            <option value="comum">Comum</option>
+            <option value="especial">Especial</option>
+        </select>
+
+        <button onclick="cadastrar(event)">Cadastrar</button>
 
         <hr>
 
-        <button onclick="carregar()">Atualizar Lista</button>
+        <h3>Dashboard</h3>
+        <div id="dashboard" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
 
+        <hr>
+
+        <h3>Lista</h3>
         <div id="listaParticipantes"></div>
-
-        <hr>
-
-        <button onclick="irSorteio()">Sorteio</button>
-        <button onclick="irHistorico()">Histórico</button>
-        <button onclick="sair()">Sair</button>
 
     </div>
 
@@ -39,35 +51,27 @@
 
         const API = "http://localhost:3000"
 
-        function sair() {
-            localStorage.removeItem("token")
-            window.location.href = "login.html"
-        }
+        async function cadastrar(e) {
 
-        function irSorteio() {
-            window.location.href = "sorteio.html"
-        }
-
-        function irHistorico() {
-            window.location.href = "historico.html"
-        }
-
-        async function cadastrar() {
+            const btn = e.target
+            btn.classList.add("loading")
 
             const nome = document.getElementById("nome").value
-            const apelido = document.getElementById("apelido").value
             const nivel = document.getElementById("nivel").value
+            const tipo = document.getElementById("tipo").value
 
-            const data = await apiFetch(API + "/usuarios/cadastrar", {
+            if (!nome || !nivel) {
+                alert("Preencha os campos")
+                btn.classList.remove("loading")
+                return
+            }
+
+            await apiFetch(API + "/usuarios/cadastrar", {
                 method: "POST",
-                body: JSON.stringify({
-                    nome,
-                    apelido,
-                    nivel
-                })
+                body: JSON.stringify({ nome, nivel, tipo_usuario: tipo })
             })
 
-            alert(data.mensagem || data.erro)
+            btn.classList.remove("loading")
             carregar()
         }
 
@@ -76,26 +80,27 @@
             const data = await apiFetch(API + "/usuarios/listar")
 
             const lista = document.getElementById("listaParticipantes")
+            const dashboard = document.getElementById("dashboard")
+
             lista.innerHTML = ""
+            dashboard.innerHTML = ""
 
-            data.dados.forEach(j => {
+            const jogadores = data.dados
 
-                lista.innerHTML += `
-        <p>
-        ${j.nome} (${j.apelido}) ⭐${j.nivel}
-        <button onclick="remover(${j.id})">Remover</button>
-        </p>
-        `
+            let n1 = jogadores.filter(j => j.nivel == 1).length
+            let n2 = jogadores.filter(j => j.nivel == 2).length
+            let n3 = jogadores.filter(j => j.nivel == 3).length
+
+            dashboard.innerHTML = `
+        <div class="card"><h2>${jogadores.length}</h2><p>Total</p></div>
+        <div class="card"><h2>${n1}</h2><p>N1</p></div>
+        <div class="card"><h2>${n2}</h2><p>N2</p></div>
+        <div class="card"><h2>${n3}</h2><p>N3</p></div>
+    `
+
+            jogadores.forEach(j => {
+                lista.innerHTML += `<p>${j.nome} - N${j.nivel}</p>`
             })
-        }
-
-        async function remover(id) {
-
-            await apiFetch(API + "/usuarios/remover/" + id, {
-                method: "DELETE"
-            })
-
-            carregar()
         }
 
         carregar()

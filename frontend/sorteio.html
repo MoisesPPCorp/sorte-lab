@@ -2,68 +2,30 @@
 <html lang="pt-BR">
 
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>SorteLab - Sorteio</title>
-
-    <link rel="icon" href="favicon.ico">
+    <title>Sorteio - SorteLab</title>
     <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
 
     <div class="container">
 
-        <h1>SorteLab</h1>
-        <h2>Sorteio de Times</h2>
+        <h1>Sorteio de Times</h1>
+
+        <input id="qtd" placeholder="Jogadores por grupo">
+
+        <br><br>
+
+        <button onclick="sortear()">Sortear</button>
 
         <hr>
 
-        <h3>Adicionar participantes</h3>
-
-        <input id="participante" placeholder="Nome, apelido ou ID">
-
-        <button onclick="adicionar()">Adicionar</button>
-        <button onclick="limpar()">Limpar Lista</button>
-
-        <div id="listaSelecionados"></div>
-
-        <hr>
-
-        <button onclick="sortear()">Sortear Times</button>
-
-        <hr>
-
-        <div class="grupos">
-
-            <div class="grupo">
-                <h3>Grupo A</h3>
-                <div id="grupoA" ondrop="soltar(event)" ondragover="permitirSoltar(event)"></div>
-            </div>
-
-            <div class="grupo">
-                <h3>Grupo B</h3>
-                <div id="grupoB" ondrop="soltar(event)" ondragover="permitirSoltar(event)"></div>
-            </div>
-
-            <div class="grupo">
-                <h3>Grupo C</h3>
-                <div id="grupoC" ondrop="soltar(event)" ondragover="permitirSoltar(event)"></div>
-            </div>
-
-            <div class="grupo">
-                <h3>Grupo D</h3>
-                <div id="grupoD" ondrop="soltar(event)" ondragover="permitirSoltar(event)"></div>
-            </div>
-
-        </div>
+        <div id="resultado"></div>
 
         <br>
 
-        <button onclick="novoSorteio()">Novo Sorteio</button>
         <button onclick="voltar()">Voltar</button>
 
     </div>
@@ -74,93 +36,63 @@
 
         const API = "http://localhost:3000"
 
-        let participantes = []
+        // 🎲 SORTEAR COM ANIMAÇÃO
+        async function sortear() {
 
-        // 🔍 BUSCAR E ADICIONAR
-        async function adicionar() {
+            const qtd = document.getElementById("qtd").value
+            const div = document.getElementById("resultado")
 
-            const termo = document.getElementById("participante").value
-
-            if (!termo) return
-
-            const data = await apiFetch(API + "/usuarios/buscar/" + termo)
-
-            if (!data.dados || data.dados.length === 0) {
-                alert("Participante não encontrado")
+            if (!qtd) {
+                alert("Informe jogadores por grupo")
                 return
             }
 
-            participantes.push(data.dados[0])
+            // 🔥 ANIMAÇÃO
+            div.innerHTML = `<div class="loading-sorteio">🎲 Embaralhando times...</div>`
 
-            atualizarLista()
-
-            document.getElementById("participante").value = ""
-        }
-
-        // 🧾 LISTA LOCAL
-        function atualizarLista() {
-
-            const lista = document.getElementById("listaSelecionados")
-
-            lista.innerHTML = ""
-
-            participantes.forEach(p => {
-                lista.innerHTML += `<p>${p.nome} (${p.apelido}) ⭐${p.nivel}</p>`
-            })
-        }
-
-        // 🧹 LIMPAR
-        function limpar() {
-            participantes = []
-            atualizarLista()
-        }
-
-        // 🎲 SORTEAR
-        async function sortear() {
-
-            const res = await apiFetch(API + "/sorteio/sortear", {
+            const data = await apiFetch(API + "/sorteio/sortear", {
                 method: "POST",
                 body: JSON.stringify({
-                    jogadoresPorGrupo: 5
+                    jogadoresPorGrupo: qtd
                 })
             })
 
-            if (!res.grupos) {
-                alert(res.erro || "Erro no sorteio")
+            if (data.erro) {
+                div.innerHTML = ""
+                alert(data.erro)
                 return
             }
 
-            // LIMPAR GRUPOS
-            ["A", "B", "C", "D"].forEach(g => {
-                const el = document.getElementById("grupo" + g)
-                if (el) el.innerHTML = ""
-            })
+            // ⏳ delay visual
+            setTimeout(() => {
 
-            res.grupos.forEach(g => {
+                div.innerHTML = `<div class="grupos"></div>`
+                const gruposDiv = div.querySelector(".grupos")
 
-                const div = document.getElementById("grupo" + g.grupo)
+                data.grupos.forEach(g => {
 
-                if (!div) return
+                    gruposDiv.innerHTML += `
+            <div class="grupo">
 
-                if (g.especial) {
-                    div.innerHTML += `<p>⭐ ${g.especial.nome}</p>`
-                }
+                <h3>Grupo ${g.grupo}</h3>
 
-                g.jogadores.forEach(j => {
-                    div.innerHTML += `
-            <div class="jogador">
-                ${j.nome} (N${j.nivel})
+                ${g.especial ? `
+                    <div class="jogador especial">
+                        ⭐ ${g.especial.nome}
+                    </div>
+                ` : ""}
+
+                ${g.jogadores.map(j => `
+                    <div class="jogador n${j.nivel}">
+                        ${j.nome} (N${j.nivel})
+                    </div>
+                `).join("")}
+
             </div>
             `
                 })
-            })
-        }
 
-        // 🔁 NOVO SORTEIO
-        function novoSorteio() {
-            if (confirm("Novo sorteio?")) {
-                location.reload()
-            }
+            }, 1200)
         }
 
         // 🔙 VOLTAR
