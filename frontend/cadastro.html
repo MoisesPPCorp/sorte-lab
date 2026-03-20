@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Criar Conta</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Criar Conta</h1>
+
+        <input id="nome_time" placeholder="Nome do Time">
+        <input id="login" placeholder="Login">
+        <input id="senha" type="password" placeholder="Senha">
+
+        <br><br>
+
+        <button onclick="criar()">Criar Conta</button>
+
+    </div>
+
+    <script>
+
+        const API = "http://localhost:3000"
+
+        async function criar() {
+
+            const nome_time = document.getElementById("nome_time").value
+            const login = document.getElementById("login").value
+            const senha = document.getElementById("senha").value
+
+            const res = await fetch(API + "/auth/criar-conta", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    nome_time,
+                    login,
+                    senha
+                })
+            })
+
+            const data = await res.json()
+
+            if (data.id) {
+                alert("Conta criada com sucesso!")
+                window.location.href = "login.html"
+            } else {
+                alert(data.erro)
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>

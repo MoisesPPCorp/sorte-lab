@@ -2,15 +2,9 @@
 <html lang="pt-BR">
 
 <head>
-
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>SorteLab - Painel Admin</title>
-
+    <title>Painel Admin</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-
 </head>
 
 <body>
@@ -18,24 +12,14 @@
     <div class="container">
 
         <h1>SorteLab</h1>
-        <h2>Painel do Administrador</h2>
-
-        <hr>
-
-        <h3>Cadastrar participante</h3>
 
         <input id="nome" placeholder="Nome">
         <input id="apelido" placeholder="Apelido">
         <input id="nivel" placeholder="Nível (1,2,3)">
-        <input id="telefone" placeholder="Telefone">
-
-        <br>
 
         <button onclick="cadastrar()">Cadastrar</button>
 
         <hr>
-
-        <h3>Lista de participantes</h3>
 
         <button onclick="carregar()">Atualizar Lista</button>
 
@@ -43,30 +27,29 @@
 
         <hr>
 
-        <button onclick="irSorteio()">Iniciar Sorteio</button>
-
+        <button onclick="irSorteio()">Sorteio</button>
+        <button onclick="irHistorico()">Histórico</button>
         <button onclick="sair()">Sair</button>
 
     </div>
 
-    <script src="script.js"></script>
+    <script src="js/api.js"></script>
 
     <script>
 
         const API = "http://localhost:3000"
 
         function sair() {
-
-            localStorage.removeItem("time_id")
-
-            window.location.href = "index.html"
-
+            localStorage.removeItem("token")
+            window.location.href = "login.html"
         }
 
         function irSorteio() {
-
             window.location.href = "sorteio.html"
+        }
 
+        function irHistorico() {
+            window.location.href = "historico.html"
         }
 
         async function cadastrar() {
@@ -74,72 +57,45 @@
             const nome = document.getElementById("nome").value
             const apelido = document.getElementById("apelido").value
             const nivel = document.getElementById("nivel").value
-            const telefone = document.getElementById("telefone").value
 
-            const time_id = localStorage.getItem("time_id")
-
-            await fetch(API + "/usuarios/cadastrar", {
-
+            const data = await apiFetch(API + "/usuarios/cadastrar", {
                 method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json"
-                },
-
                 body: JSON.stringify({
-
-                    time_id,
                     nome,
                     apelido,
-                    nivel,
-                    telefone,
-                    tipo_usuario: "participante"
-
+                    nivel
                 })
-
             })
 
-            alert("Participante cadastrado")
-
+            alert(data.mensagem || data.erro)
             carregar()
-
         }
 
         async function carregar() {
 
-            const time_id = localStorage.getItem("time_id")
-
-            const res = await fetch(API + "/usuarios/listar/" + time_id)
-
-            const jogadores = await res.json()
+            const data = await apiFetch(API + "/usuarios/listar")
 
             const lista = document.getElementById("listaParticipantes")
-
             lista.innerHTML = ""
 
-            jogadores.forEach(j => {
+            data.dados.forEach(j => {
 
                 lista.innerHTML += `
-<p>
-${j.nome} (${j.apelido}) ⭐${j.nivel}
-<button onclick="remover(${j.id})">Remover</button>
-</p>
-`
-
+        <p>
+        ${j.nome} (${j.apelido}) ⭐${j.nivel}
+        <button onclick="remover(${j.id})">Remover</button>
+        </p>
+        `
             })
-
         }
 
         async function remover(id) {
 
-            await fetch(API + "/usuarios/remover/" + id, {
-
+            await apiFetch(API + "/usuarios/remover/" + id, {
                 method: "DELETE"
-
             })
 
             carregar()
-
         }
 
         carregar()

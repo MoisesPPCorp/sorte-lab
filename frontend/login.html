@@ -1,17 +1,10 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
 
 <head>
-
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Login - SorteLab</title>
-
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-
 </head>
 
 <body>
@@ -20,23 +13,39 @@
 
         <h1>SorteLab</h1>
 
-        <p>Login do Administrador</p>
-
         <input id="login" placeholder="Login">
-
-        <br>
-
         <input id="senha" type="password" placeholder="Senha">
 
         <br><br>
 
         <button onclick="entrar()">Entrar</button>
 
-        <button onclick="voltar()">Voltar</button>
-
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const API = "http://localhost:3000"
+
+        async function entrar() {
+
+            const login = document.getElementById("login").value
+            const senha = document.getElementById("senha").value
+
+            const res = await fetch(API + "/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ login, senha })
+            })
+
+            const data = await res.json()
+
+            if (data.token) {
+                localStorage.setItem("token", data.token)
+                window.location.href = "admin.html"
+            } else {
+                alert(data.erro)
+            }
+        }
+    </script>
 
 </body>
 

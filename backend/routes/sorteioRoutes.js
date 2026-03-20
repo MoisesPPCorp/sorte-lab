@@ -1,164 +1,108 @@
-const express = require("express")
-const router = express.Router()
-const db = require("../db")
+const express = require("express");
+const router = express.Router();
+const db = require("../db");
+const verificarToken = require("../middleware/auth");
+const PDFDocument = require("pdfkit");
 
-router.post("/sortear/:time_id", (req, res) => {
+// EMBARALHAR
+function shuffle(arr) {
+    return arr.sort(() => Math.random() - 0.5);
+}
 
-    const { time_id } = req.params
+// 🎯 SORTEIO
+router.post("/sortear", verificarToken, (req, res) => {
 
-    const sql = `
-    SELECT * FROM usuarios
-    WHERE time_id = ?
-    `
+    const time_id = req.usuario.time_id;
+    let { jogadoresPorGrupo } = req.body;
 
-    db.query(sql, [time_id], (err, jogadores) => {
+    jogadoresPorGrupo = Number(jogadoresPorGrupo);
 
-        if (err) {
-            console.error(err)
-            return res.status(500).json({ erro: "Erro no banco" })
+    if (!jogadoresPorGrupo || jogadoresPorGrupo <= 0) {
+        return res.status(400).json({ erro: "Informe jogadores por grupo válido" });
+    }
+
+    db.query("SELECT * FROM usuarios WHERE time_id = ?", [time_id], (err, jogadores) => {
+
+        if (err) return res.status(500).json({ erro: "Erro no banco" });
+
+        if (!jogadores.length) {
+            return res.json({ erro: "Sem participantes" });
         }
 
-        if (jogadores.length === 0) {
-            return res.json({ erro: "Nenhum participante encontrado" })
-        }
+        let especiais = jogadores.filter(j => j.tipo_usuario === "especial");
+        let comuns = jogadores.filter(j => j.tipo_usuario !== "especial");
 
-        // separar goleiros e linha
-        let goleiros = jogadores.filter(j => j.tipo_usuario === "goleiro")
-        let linha = jogadores.filter(j => j.tipo_usuario !== "goleiro")
+        let grupos = [];
+        const totalGrupos = Math.ceil(comuns.length / jogadoresPorGrupo);
 
-        // separar níveis
-        let nivel1 = linha.filter(j => j.nivel == 1)
-        let nivel2 = linha.filter(j => j.nivel == 2)
-        let nivel3 = linha.filter(j => j.nivel == 3)
-
-        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5)
-
-        shuffle(nivel1)
-        shuffle(nivel2)
-        shuffle(nivel3)
-        shuffle(goleiros)
-
-        const linhaPorGrupo = 4
-
-        const quantidadeGrupos = Math.ceil(linha.length / linhaPorGrupo)
-
-        let grupos = []
-
-        for (let i = 0; i < quantidadeGrupos; i++) {
-
+        for (let i = 0; i < totalGrupos; i++) {
             grupos.push({
                 grupo: String.fromCharCode(65 + i),
-                linha: [],
-                goleiro: null
-            })
-
+                jogadores: [],
+                especial: especiais[i] || null
+            });
         }
 
-        // distribuir nível 3
-        nivel3.forEach((j, i) => {
+        shuffle(comuns);
 
-            let g = i % quantidadeGrupos
-            grupos[g].linha.push(j)
+        let index = 0;
+        comuns.forEach(j => {
+            grupos[index].jogadores.push(j);
+            index = (index + 1) % grupos.length;
+        });
 
-        })
+        db.query(
+            "INSERT INTO sorteios (time_id, data_sorteio, resultado) VALUES (?, NOW(), ?)",
+            [time_id, JSON.stringify(grupos)]
+        );
 
-        // distribuir nível 1
-        nivel1.forEach((j, i) => {
+        res.json({ grupos });
 
-            let g = i % quantidadeGrupos
-            grupos[g].linha.push(j)
+    });
 
-        })
+});
 
-        // distribuir nível 2
-        let g = 0
+// 📄 PDF
+router.get("/pdf/:id", verificarToken, (req, res) => {
 
-        nivel2.forEach(j => {
+    const { id } = req.params;
+    const time_id = req.usuario.time_id;
 
-            while (grupos[g].linha.length >= linhaPorGrupo) {
+    db.query(
+        "SELECT * FROM sorteios WHERE id = ? AND time_id = ?",
+        [id, time_id],
+        (err, result) => {
 
-                g++
-                if (g >= grupos.length) g = 0
+            if (!result.length) return res.json({ erro: "Não encontrado" });
 
-            }
+            const grupos = JSON.parse(result[0].resultado);
 
-            grupos[g].linha.push(j)
+            const doc = new PDFDocument();
+            res.setHeader("Content-Type", "application/pdf");
 
-            g++
-            if (g >= grupos.length) g = 0
+            doc.pipe(res);
 
-        })
+            doc.text("SorteLab", { align: "center" });
 
-        // distribuir goleiros
-        goleiros.forEach((gol, i) => {
+            grupos.forEach(g => {
 
-            let g = i % quantidadeGrupos
-            grupos[g].goleiro = gol
+                doc.moveDown().text("Grupo " + g.grupo);
 
-        })
+                if (g.especial) {
+                    doc.text("⭐ Especial: " + g.especial.nome);
+                }
 
-        const resultadoJSON = JSON.stringify(grupos)
+                g.jogadores.forEach(j => {
+                    doc.text("- " + j.nome);
+                });
 
-        const sqlSalvar = `
-        INSERT INTO sorteios (time_id, data_sorteio, resultado)
-        VALUES (?, NOW(), ?)
-        `
+            });
 
-        db.query(sqlSalvar, [time_id, resultadoJSON])
+            doc.end();
 
-        res.json(grupos)
-
-    })
-
-})
-
-router.get("/historico/:time_id", (req, res) => {
-
-    const { time_id } = req.params
-
-    const sql = `
-    SELECT *
-    FROM sorteios
-    WHERE time_id = ?
-    ORDER BY data_sorteio DESC
-    `
-
-    db.query(sql, [time_id], (err, result) => {
-
-        if (err) {
-            return res.status(500).json(err)
         }
+    );
 
-        res.json(result)
+});
 
-    })
-
-})
-
-router.get("/abrir/:id", (req, res) => {
-
-    const { id } = req.params
-
-    const sql = `
-    SELECT *
-    FROM sorteios
-    WHERE id = ?
-    `
-
-    db.query(sql, [id], (err, result) => {
-
-        if (err) {
-            return res.status(500).json(err)
-        }
-
-        if (result.length === 0) {
-            return res.json({ erro: "Sorteio não encontrado" })
-        }
-
-        res.json(result[0])
-
-    })
-
-})
-
-module.exports = router
+module.exports = router;

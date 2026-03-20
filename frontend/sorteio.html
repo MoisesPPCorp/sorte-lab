@@ -68,39 +68,36 @@
 
     </div>
 
+    <script src="js/api.js"></script>
+
     <script>
 
         const API = "http://localhost:3000"
 
         let participantes = []
 
+        // 🔍 BUSCAR E ADICIONAR
         async function adicionar() {
 
             const termo = document.getElementById("participante").value
 
-            if (termo == "") return
+            if (!termo) return
 
-            const time_id = localStorage.getItem("time_id")
+            const data = await apiFetch(API + "/usuarios/buscar/" + termo)
 
-            const res = await fetch(API + "/usuarios/buscar/" + time_id + "/" + termo)
-
-            const jogadores = await res.json()
-
-            if (jogadores.length == 0) {
-
+            if (!data.dados || data.dados.length === 0) {
                 alert("Participante não encontrado")
                 return
-
             }
 
-            participantes.push(jogadores[0])
+            participantes.push(data.dados[0])
 
             atualizarLista()
 
             document.getElementById("participante").value = ""
-
         }
 
+        // 🧾 LISTA LOCAL
         function atualizarLista() {
 
             const lista = document.getElementById("listaSelecionados")
@@ -108,106 +105,67 @@
             lista.innerHTML = ""
 
             participantes.forEach(p => {
-
-                lista.innerHTML += `
-<p>${p.nome} (${p.apelido}) ⭐${p.nivel}</p>
-`
-
+                lista.innerHTML += `<p>${p.nome} (${p.apelido}) ⭐${p.nivel}</p>`
             })
-
         }
 
+        // 🧹 LIMPAR
         function limpar() {
-
             participantes = []
             atualizarLista()
-
         }
 
+        // 🎲 SORTEAR
         async function sortear() {
 
-            const time_id = localStorage.getItem("time_id")
-
-            const res = await fetch(API + "/sorteio/sortear/" + time_id, {
-                method: "POST"
+            const res = await apiFetch(API + "/sorteio/sortear", {
+                method: "POST",
+                body: JSON.stringify({
+                    jogadoresPorGrupo: 5
+                })
             })
 
-            const grupos = await res.json()
+            if (!res.grupos) {
+                alert(res.erro || "Erro no sorteio")
+                return
+            }
 
-            document.getElementById("grupoA").innerHTML = ""
-            document.getElementById("grupoB").innerHTML = ""
-            document.getElementById("grupoC").innerHTML = ""
-            document.getElementById("grupoD").innerHTML = ""
+            // LIMPAR GRUPOS
+            ["A", "B", "C", "D"].forEach(g => {
+                const el = document.getElementById("grupo" + g)
+                if (el) el.innerHTML = ""
+            })
 
-            grupos.forEach(g => {
+            res.grupos.forEach(g => {
 
                 const div = document.getElementById("grupo" + g.grupo)
 
-                g.linha.forEach(j => {
+                if (!div) return
 
-                    div.innerHTML += `
-<div class="jogador"
-draggable="true"
-ondragstart="arrastar(event)"
-id="jogador-${j.id}">
-${j.nome}
-</div>
-`
-
-                })
-
-                if (g.goleiro) {
-
-                    div.innerHTML += `
-<div class="jogador goleiro">
-🥅 ${g.goleiro.nome}
-</div>
-`
-
+                if (g.especial) {
+                    div.innerHTML += `<p>⭐ ${g.especial.nome}</p>`
                 }
 
+                g.jogadores.forEach(j => {
+                    div.innerHTML += `
+            <div class="jogador">
+                ${j.nome} (N${j.nivel})
+            </div>
+            `
+                })
             })
-
         }
 
+        // 🔁 NOVO SORTEIO
         function novoSorteio() {
-
-            if (confirm("Deseja realizar novo sorteio?")) {
-
+            if (confirm("Novo sorteio?")) {
                 location.reload()
-
             }
-
         }
 
+        // 🔙 VOLTAR
         function voltar() {
-
             window.location.href = "admin.html"
-
-        }
-
-        function permitirSoltar(ev) {
-
-            ev.preventDefault()
-
-        }
-
-        function arrastar(ev) {
-
-            ev.dataTransfer.setData("text", ev.target.id)
-
-        }
-
-        function soltar(ev) {
-
-            ev.preventDefault()
-
-            const data = ev.dataTransfer.getData("text")
-
-            const jogador = document.getElementById(data)
-
-            ev.target.appendChild(jogador)
-
         }
 
     </script>

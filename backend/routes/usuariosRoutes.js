@@ -1,140 +1,78 @@
-const express = require("express")
-const router = express.Router()
-const db = require("../db")
+const express = require("express");
+const router = express.Router();
+const db = require("../db");
+const verificarToken = require("../middleware/auth");
 
-// CADASTRAR PARTICIPANTE
-router.post("/cadastrar", (req, res) => {
+// 📌 CADASTRAR
+router.post("/cadastrar", verificarToken, (req, res) => {
 
-    const { time_id, nome, apelido, nivel, tipo_usuario } = req.body
+    const time_id = req.usuario.time_id;
+    const { nome, apelido, nivel, tipo_participante } = req.body;
 
-    const sql = `
-    INSERT INTO usuarios (time_id, nome, apelido, nivel, tipo_usuario)
-    VALUES (?, ?, ?, ?, ?)
-    `
+    if (!nome || !nivel) {
+        return res.status(400).json({ erro: "Nome e nível obrigatórios" });
+    }
 
-    db.query(sql, [time_id, nome, apelido, nivel, tipo_usuario], (err, result) => {
+    const tipo = tipo_participante || "comum";
 
-        if (err) {
-            console.error(err)
-            return res.status(500).json({ erro: "Erro ao cadastrar participante" })
-        }
+    db.query(
+        `INSERT INTO usuarios (time_id, nome, apelido, nivel, tipo_usuario)
+         VALUES (?, ?, ?, ?, ?)`,
+        [time_id, nome, apelido, nivel, tipo],
+        (err, result) => {
 
-        res.json({
-            mensagem: "Participante cadastrado",
-            id: result.insertId
-        })
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ erro: "Erro ao cadastrar" });
+            }
 
-    })
-
-})
-
-
-// LISTAR PARTICIPANTES
-router.get("/listar/:time_id", (req, res) => {
-
-    const { time_id } = req.params
-
-    const sql = `
-    SELECT * FROM usuarios
-    WHERE time_id = ?
-    `
-
-    db.query(sql, [time_id], (err, result) => {
-
-        if (err) {
-            return res.status(500).json(err)
-        }
-
-        res.json(result)
-
-    })
-
-})
-
-
-// REMOVER PARTICIPANTE
-router.delete("/remover/:id", (req, res) => {
-
-    const { id } = req.params
-
-    const sql = `
-    DELETE FROM usuarios
-    WHERE id = ?
-    `
-
-    db.query(sql, [id], (err, result) => {
-
-        if (err) {
-            return res.status(500).json(err)
-        }
-
-        res.json({
-            mensagem: "Participante removido"
-        })
-
-    })
-
-})
-
-// EDITAR PARTICIPANTE
-router.put("/editar/:id", (req, res) => {
-
-    const { id } = req.params
-    const { nome, apelido, nivel, tipo_usuario } = req.body
-
-    const sql = `
-    UPDATE usuarios
-    SET nome = ?, apelido = ?, nivel = ?, tipo_usuario = ?
-    WHERE id = ?
-    `
-
-    db.query(sql, [nome, apelido, nivel, tipo_usuario, id], (err, result) => {
-
-        if (err) {
-            return res.status(500).json(err)
-        }
-
-        res.json({
-            mensagem: "Participante atualizado"
-        })
-
-    })
-
-})
-
-module.exports = router
-
-router.get("/buscar/:time_id/:termo", (req, res) => {
-
-    const { time_id, termo } = req.params
-
-    const sql = `
-SELECT * FROM usuarios
-WHERE time_id = ?
-AND (
-nome LIKE ?
-OR apelido LIKE ?
-OR id = ?
-)
-`
-
-    db.query(sql, [
-
-        time_id,
-        `%${termo}%`,
-        `%${termo}%`,
-        termo
-
-    ], (err, result) => {
-
-        if (err) {
-
-            return res.status(500).json(err)
+            res.json({
+                mensagem: "Participante cadastrado",
+                id: result.insertId
+            });
 
         }
+    );
 
-        res.json(result)
+});
 
-    })
+// 📌 LISTAR
+router.get("/listar", verificarToken, (req, res) => {
 
-})
+    const time_id = req.usuario.time_id;
+
+    db.query(
+        "SELECT * FROM usuarios WHERE time_id = ?",
+        [time_id],
+        (err, result) => {
+
+            if (err) return res.status(500).json({ erro: "Erro" });
+
+            res.json({ dados: result });
+
+        }
+    );
+
+});
+
+// 📌 REMOVER
+router.delete("/remover/:id", verificarToken, (req, res) => {
+
+    const { id } = req.params;
+    const time_id = req.usuario.time_id;
+
+    db.query(
+        "DELETE FROM usuarios WHERE id = ? AND time_id = ?",
+        [id, time_id],
+        (err) => {
+
+            if (err) return res.status(500).json({ erro: "Erro ao remover" });
+
+            res.json({ mensagem: "Removido" });
+
+        }
+    );
+
+});
+
+module.exports = router;
