@@ -1,107 +1,60 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<script src="js/api.js"></script>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sorteio - SorteLab</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+<script>
 
-<body>
+    async function sortear() {
 
-    <div class="container">
+        const qtd = document.getElementById("qtd").value
+        const div = document.getElementById("resultado")
 
-        <h1>Sorteio de Times</h1>
+        if (!qtd) {
+            alert("Informe jogadores por grupo")
+            return
+        }
 
-        <input id="qtd" placeholder="Jogadores por grupo">
+        div.innerHTML = `<div>🎲 Embaralhando...</div>`
 
-        <br><br>
-
-        <button onclick="sortear()">Sortear</button>
-
-        <hr>
-
-        <div id="resultado"></div>
-
-        <br>
-
-        <button onclick="voltar()">Voltar</button>
-
-    </div>
-
-    <script src="js/api.js"></script>
-
-    <script>
-
-        const API = "http://localhost:3000"
-
-        // 🎲 SORTEAR COM ANIMAÇÃO
-        async function sortear() {
-
-            const qtd = document.getElementById("qtd").value
-            const div = document.getElementById("resultado")
-
-            if (!qtd) {
-                alert("Informe jogadores por grupo")
-                return
-            }
-
-            // 🔥 ANIMAÇÃO
-            div.innerHTML = `<div class="loading-sorteio">🎲 Embaralhando times...</div>`
-
-            const data = await apiFetch(API + "/sorteio/sortear", {
-                method: "POST",
-                body: JSON.stringify({
-                    jogadoresPorGrupo: qtd
-                })
+        const data = await apiFetch("/sorteio/sortear", {
+            method: "POST",
+            body: JSON.stringify({
+                jogadoresPorGrupo: qtd
             })
+        })
 
-            if (data.erro) {
-                div.innerHTML = ""
-                alert(data.erro)
-                return
-            }
-
-            // ⏳ delay visual
-            setTimeout(() => {
-
-                div.innerHTML = `<div class="grupos"></div>`
-                const gruposDiv = div.querySelector(".grupos")
-
-                data.grupos.forEach(g => {
-
-                    gruposDiv.innerHTML += `
-            <div class="grupo">
-
-                <h3>Grupo ${g.grupo}</h3>
-
-                ${g.especial ? `
-                    <div class="jogador especial">
-                        ⭐ ${g.especial.nome}
-                    </div>
-                ` : ""}
-
-                ${g.jogadores.map(j => `
-                    <div class="jogador n${j.nivel}">
-                        ${j.nome} (N${j.nivel})
-                    </div>
-                `).join("")}
-
-            </div>
-            `
-                })
-
-            }, 1200)
+        if (data.erro) {
+            div.innerHTML = ""
+            alert(data.erro)
+            return
         }
 
-        // 🔙 VOLTAR
-        function voltar() {
-            window.location.href = "admin.html"
-        }
+        div.innerHTML = `<div class="grupos"></div>`
+        const gruposDiv = div.querySelector(".grupos")
 
-    </script>
+        data.grupos.forEach(g => {
 
-</body>
+            gruposDiv.innerHTML += `
+        <div class="grupo">
+            <h3>Grupo ${g.grupo}</h3>
 
-</html>
+            ${g.especial ? `
+                <div class="jogador especial">
+                    ⭐ ${g.especial.nome}
+                </div>
+            ` : ""}
+
+            ${g.jogadores.map(j => `
+                <div class="jogador n${j.nivel}">
+                    ${j.nome} (N${j.nivel})
+                </div>
+            `).join("")}
+
+        </div>
+        `
+        })
+    }
+
+    function voltar() {
+        window.location.href = "admin.html"
+    }
+
+</script>

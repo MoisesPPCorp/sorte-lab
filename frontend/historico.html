@@ -1,39 +1,15 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<script src="js/api.js"></script>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Histórico</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+<script>
 
-<body>
+    async function carregar() {
 
-    <div class="container">
+        const data = await apiFetch("/sorteio/historico")
 
-        <h1>Histórico</h1>
+        const div = document.getElementById("lista")
+        div.innerHTML = ""
 
-        <div id="lista"></div>
-
-        <button onclick="voltar()">Voltar</button>
-
-    </div>
-
-    <script src="js/api.js"></script>
-
-    <script>
-
-        const API = "http://localhost:3000"
-
-        async function carregar() {
-
-            const data = await apiFetch(API + "/sorteio/historico")
-
-            const div = document.getElementById("lista")
-
-            div.innerHTML = ""
-
-            data.dados.forEach(s => {
+            (data.dados || []).forEach(s => {
 
                 div.innerHTML += `
         <p>
@@ -43,27 +19,21 @@
         </p>
         `
             })
-        }
+    }
 
-        async function abrir(id) {
+    async function abrir(id) {
+        const data = await apiFetch("/sorteio/abrir/" + id)
+        console.log(JSON.parse(data.resultado))
+    }
 
-            const data = await apiFetch(API + "/sorteio/abrir/" + id)
+    function pdf(id) {
+        window.open("https://sorte-lab-production.up.railway.app/sorteio/pdf/" + id)
+    }
 
-            console.log(JSON.parse(data.resultado))
-        }
+    function voltar() {
+        window.location.href = "admin.html"
+    }
 
-        function pdf(id) {
-            window.open(API + "/sorteio/pdf/" + id)
-        }
+    carregar()
 
-        function voltar() {
-            window.location.href = "admin.html"
-        }
-
-        carregar()
-
-    </script>
-
-</body>
-
-</html>
+</script>

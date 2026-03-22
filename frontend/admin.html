@@ -1,112 +1,59 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<script src="js/api.js"></script>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin - SorteLab</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+<script>
 
-<body>
+    async function cadastrar(e) {
 
-    <div class="container">
+        const btn = e.target
+        btn.classList.add("loading")
 
-        <h1>SorteLab</h1>
+        const nome = document.getElementById("nome").value
+        const nivel = document.getElementById("nivel").value
+        const tipo = document.getElementById("tipo").value
 
-        <h3>Cadastrar participante</h3>
-
-        <input id="nome" placeholder="Nome">
-        <input id="apelido" placeholder="Apelido">
-
-        <select id="nivel">
-            <option value="">Selecione o nível</option>
-            <option value="1">Nível 1</option>
-            <option value="2">Nível 2</option>
-            <option value="3">Nível 3</option>
-        </select>
-
-        <select id="tipo">
-            <option value="comum">Comum</option>
-            <option value="especial">Especial</option>
-        </select>
-
-        <button onclick="cadastrar(event)">Cadastrar</button>
-
-        <hr>
-
-        <h3>Dashboard</h3>
-        <div id="dashboard" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
-
-        <hr>
-
-        <h3>Lista</h3>
-        <div id="listaParticipantes"></div>
-
-    </div>
-
-    <script src="js/api.js"></script>
-
-    <script>
-
-        const API = "http://localhost:3000"
-
-        async function cadastrar(e) {
-
-            const btn = e.target
-            btn.classList.add("loading")
-
-            const nome = document.getElementById("nome").value
-            const nivel = document.getElementById("nivel").value
-            const tipo = document.getElementById("tipo").value
-
-            if (!nome || !nivel) {
-                alert("Preencha os campos")
-                btn.classList.remove("loading")
-                return
-            }
-
-            await apiFetch(API + "/usuarios/cadastrar", {
-                method: "POST",
-                body: JSON.stringify({ nome, nivel, tipo_usuario: tipo })
-            })
-
+        if (!nome || !nivel) {
+            alert("Preencha os campos")
             btn.classList.remove("loading")
-            carregar()
+            return
         }
 
-        async function carregar() {
+        await apiFetch("/usuarios/cadastrar", {
+            method: "POST",
+            body: JSON.stringify({ nome, nivel, tipo_usuario: tipo })
+        })
 
-            const data = await apiFetch(API + "/usuarios/listar")
+        btn.classList.remove("loading")
+        carregar()
+    }
 
-            const lista = document.getElementById("listaParticipantes")
-            const dashboard = document.getElementById("dashboard")
+    async function carregar() {
 
-            lista.innerHTML = ""
-            dashboard.innerHTML = ""
+        const data = await apiFetch("/usuarios/listar")
 
-            const jogadores = data.dados
+        const lista = document.getElementById("listaParticipantes")
+        const dashboard = document.getElementById("dashboard")
 
-            let n1 = jogadores.filter(j => j.nivel == 1).length
-            let n2 = jogadores.filter(j => j.nivel == 2).length
-            let n3 = jogadores.filter(j => j.nivel == 3).length
+        lista.innerHTML = ""
+        dashboard.innerHTML = ""
 
-            dashboard.innerHTML = `
+        const jogadores = data.dados || []
+
+        let n1 = jogadores.filter(j => j.nivel == 1).length
+        let n2 = jogadores.filter(j => j.nivel == 2).length
+        let n3 = jogadores.filter(j => j.nivel == 3).length
+
+        dashboard.innerHTML = `
         <div class="card"><h2>${jogadores.length}</h2><p>Total</p></div>
         <div class="card"><h2>${n1}</h2><p>N1</p></div>
         <div class="card"><h2>${n2}</h2><p>N2</p></div>
         <div class="card"><h2>${n3}</h2><p>N3</p></div>
     `
 
-            jogadores.forEach(j => {
-                lista.innerHTML += `<p>${j.nome} - N${j.nivel}</p>`
-            })
-        }
+        jogadores.forEach(j => {
+            lista.innerHTML += `<p>${j.nome} - N${j.nivel}</p>`
+        })
+    }
 
-        carregar()
+    carregar()
 
-    </script>
-
-</body>
-
-</html>
+</script>
