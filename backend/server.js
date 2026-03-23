@@ -8,10 +8,13 @@ const sorteioRoutes = require("./routes/sorteioRoutes");
 
 const app = express();
 
-// 🔥 MIDDLEWARES
+// 🔥 CORS LIBERADO (PROBLEMA RESOLVIDO DEFINITIVO)
 app.use(cors({
-    origin: "*"
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
 app.use(express.json());
 
 // 🔍 TESTE
@@ -24,22 +27,9 @@ app.use("/auth", authRoutes);
 app.use("/usuarios", usuariosRoutes);
 app.use("/sorteio", sorteioRoutes);
 
-// 🔥 PORTA (IMPORTANTE PARA DEPLOY)
+// 🔥 PORTA RAILWAY
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-
-    console.log(`Servidor rodando na porta ${PORT}`);
-
-    console.log("\n📌 ROTAS DISPONÍVEIS:");
-    console.log("POST   /auth/criar-conta");
-    console.log("POST   /auth/login");
-
-    console.log("POST   /usuarios/cadastrar");
-    console.log("GET    /usuarios/listar");
-    console.log("PUT    /usuarios/editar/:id");
-    console.log("DELETE /usuarios/remover/:id");
-
-    console.log("POST   /sorteio/sortear");
-    console.log("GET    /sorteio/historico");
+    console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
