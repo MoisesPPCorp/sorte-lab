@@ -11,4 +11,9 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+// 🔥 TRATAMENTO DE ERRO GLOBAL
+pool.on("error", (err) => {
+    console.error("ERRO MYSQL:", err);
+});
+
 module.exports = pool;
