@@ -33,25 +33,34 @@
             const login = document.getElementById("login").value
             const senha = document.getElementById("senha").value
 
-            const res = await fetch(API + "/auth/criar-conta", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    nome_time,
-                    login,
-                    senha
+            try {
+
+                const res = await fetch("https://sorte-lab-production.up.railway.app/auth/criar-conta", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        nome_time,
+                        login,
+                        senha
+                    })
                 })
-            })
 
-            const data = await res.json()
+                const data = await res.json()
 
-            if (data.id) {
-                alert("Conta criada com sucesso!")
-                window.location.href = "login.html"
-            } else {
-                alert(data.erro)
+                console.log(data) // 🔥 IMPORTANTE
+
+                if (data.erro) {
+                    alert(data.erro)
+                } else {
+                    alert("Conta criada com sucesso!")
+                    window.location.href = "login.html"
+                }
+
+            } catch (err) {
+                console.error(err)
+                alert("Erro ao conectar com o servidor")
             }
         }
 

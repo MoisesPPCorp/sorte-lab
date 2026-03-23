@@ -9,7 +9,9 @@ const sorteioRoutes = require("./routes/sorteioRoutes");
 const app = express();
 
 // 🔥 MIDDLEWARES
-app.use(cors());
+app.use(cors({
+    origin: "*"
+}));
 app.use(express.json());
 
 // 🔍 TESTE
