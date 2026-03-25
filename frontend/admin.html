@@ -1,59 +1,153 @@
-<script src="./api.js"></script>
+<!DOCTYPE html>
+<html lang="pt-BR">
 
-<script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - SorteLab</title>
+    <link rel="stylesheet" href="style.css">
+</head>
 
-    async function cadastrar(e) {
+<body>
 
-        const btn = e.target
-        btn.classList.add("loading")
+    <div class="container">
 
-        const nome = document.getElementById("nome").value
-        const nivel = document.getElementById("nivel").value
-        const tipo = document.getElementById("tipo").value
+        <h1>SorteLab</h1>
 
-        if (!nome || !nivel) {
-            alert("Preencha os campos")
-            btn.classList.remove("loading")
-            return
+        <h3>Cadastrar participante</h3>
+
+        <input id="nome" placeholder="Nome">
+        <input id="nivel" placeholder="Nível (1,2,3)">
+
+        <select id="tipo">
+            <option value="comum">Comum</option>
+            <option value="especial">Especial</option>
+        </select>
+
+        <br><br>
+
+        <button onclick="cadastrar(event)">Cadastrar</button>
+
+        <hr>
+
+        <h3>Dashboard</h3>
+        <div id="dashboard"></div>
+
+        <hr>
+
+        <h3>Lista de participantes</h3>
+        <div id="listaParticipantes"></div>
+
+        <hr>
+
+        <button onclick="irSorteio()">Sorteio</button>
+        <button onclick="irHistorico()">Histórico</button>
+        <button onclick="sair()">Sair</button>
+
+    </div>
+
+    <!-- 🔥 API -->
+    <script src="api.js"></script>
+
+    <!-- 🔥 SCRIPT -->
+    <script>
+
+        document.addEventListener("DOMContentLoaded", () => {
+            carregar();
+        });
+
+        async function cadastrar(e) {
+
+            const btn = e.target;
+            btn.classList.add("loading");
+
+            const nome = document.getElementById("nome").value;
+            const nivel = document.getElementById("nivel").value;
+            const tipo = document.getElementById("tipo").value;
+
+            if (!nome || !nivel) {
+                alert("Preencha os campos");
+                btn.classList.remove("loading");
+                return;
+            }
+
+            try {
+
+                await apiFetch("/usuarios/cadastrar", {
+                    method: "POST",
+                    body: JSON.stringify({ nome, nivel, tipo_usuario: tipo })
+                });
+
+                alert("Cadastrado com sucesso");
+
+                document.getElementById("nome").value = "";
+                document.getElementById("nivel").value = "";
+
+                carregar();
+
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao cadastrar");
+            }
+
+            btn.classList.remove("loading");
         }
 
-        await apiFetch("/usuarios/cadastrar", {
-            method: "POST",
-            body: JSON.stringify({ nome, nivel, tipo_usuario: tipo })
-        })
+        async function carregar() {
 
-        btn.classList.remove("loading")
-        carregar()
-    }
+            const lista = document.getElementById("listaParticipantes");
+            const dashboard = document.getElementById("dashboard");
 
-    async function carregar() {
+            if (!lista || !dashboard) {
+                console.error("Elementos não encontrados");
+                return;
+            }
 
-        const data = await apiFetch("/usuarios/listar")
+            try {
 
-        const lista = document.getElementById("listaParticipantes")
-        const dashboard = document.getElementById("dashboard")
+                const data = await apiFetch("/usuarios/listar");
 
-        lista.innerHTML = ""
-        dashboard.innerHTML = ""
+                const jogadores = data.dados || [];
 
-        const jogadores = data.dados || []
+                lista.innerHTML = "";
+                dashboard.innerHTML = "";
 
-        let n1 = jogadores.filter(j => j.nivel == 1).length
-        let n2 = jogadores.filter(j => j.nivel == 2).length
-        let n3 = jogadores.filter(j => j.nivel == 3).length
+                let n1 = jogadores.filter(j => j.nivel == 1).length;
+                let n2 = jogadores.filter(j => j.nivel == 2).length;
+                let n3 = jogadores.filter(j => j.nivel == 3).length;
 
-        dashboard.innerHTML = `
-        <div class="card"><h2>${jogadores.length}</h2><p>Total</p></div>
-        <div class="card"><h2>${n1}</h2><p>N1</p></div>
-        <div class="card"><h2>${n2}</h2><p>N2</p></div>
-        <div class="card"><h2>${n3}</h2><p>N3</p></div>
-    `
+                dashboard.innerHTML = `
+                    <div class="card"><h2>${jogadores.length}</h2><p>Total</p></div>
+                    <div class="card"><h2>${n1}</h2><p>N1</p></div>
+                    <div class="card"><h2>${n2}</h2><p>N2</p></div>
+                    <div class="card"><h2>${n3}</h2><p>N3</p></div>
+                `;
 
-        jogadores.forEach(j => {
-            lista.innerHTML += `<p>${j.nome} - N${j.nivel}</p>`
-        })
-    }
+                jogadores.forEach(j => {
+                    lista.innerHTML += `<p>${j.nome} - N${j.nivel}</p>`;
+                });
 
-    carregar()
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao carregar participantes");
+            }
+        }
 
-</script>
+        function sair() {
+            localStorage.removeItem("token");
+            window.location.href = "login.html";
+        }
+
+        function irSorteio() {
+            window.location.href = "sorteio.html";
+        }
+
+        function irHistorico() {
+            window.location.href = "historico.html";
+        }
+
+    </script>
+
+</body>
+
+</html>
